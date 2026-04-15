@@ -1,90 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import bigNewsLogo from './assets/bignews-logo.png';
-
-const WORDPRESS_SITE = 'bignews9.wordpress.com';
-const WORDPRESS_API = `https://public-api.wordpress.com/rest/v1.1/sites/${WORDPRESS_SITE}`;
-const DEFAULT_CATEGORY_NAMES = [
-  'KATEGORIA A',
-  'KATEGORIA B',
-  'KATEGORIA C',
-  'KATEGORIA D',
-  'KATEGORIA E',
-];
-
-const fallbackCategories = DEFAULT_CATEGORY_NAMES.map((name, index) => ({
-  name,
-  slug: `kategoria-${String.fromCharCode(97 + index)}`,
-  articles: [],
-}));
-
-function htmlToText(html) {
-  if (!html) {
-    return '';
-  }
-
-  if (typeof window === 'undefined') {
-    return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-  }
-
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  return (doc.body.textContent || '').replace(/\s+/g, ' ').trim();
-}
-
-function formatPostTime(dateValue) {
-  if (!dateValue) {
-    return '';
-  }
-
-  const date = new Date(dateValue);
-  return new Intl.DateTimeFormat('sq-AL', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(date);
-}
-
-function mapWordPressPost(post) {
-  const categories = Object.values(post.categories || {});
-  const primaryCategory = categories[0]?.name || 'Pa kategori';
-  const excerpt = htmlToText(post.excerpt || post.content).slice(0, 180);
-
-  return {
-    id: post.ID,
-    title: htmlToText(post.title),
-    excerpt,
-    time: formatPostTime(post.date),
-    author: post.author?.name || 'Redaksia BIgNews',
-    bodyHtml: post.content || '',
-    bodyText: htmlToText(post.content || ''),
-    image: post.featured_image || '',
-    link: post.URL,
-    category: primaryCategory,
-    label: primaryCategory,
-  };
-}
-
-function buildCategories(categoriesResponse, postsResponse) {
-  const wpCategories = (categoriesResponse?.categories || [])
-    .filter((category) => DEFAULT_CATEGORY_NAMES.includes(category.name))
-    .sort(
-      (left, right) =>
-        DEFAULT_CATEGORY_NAMES.indexOf(left.name) - DEFAULT_CATEGORY_NAMES.indexOf(right.name)
-    );
-
-  const mappedPosts = (postsResponse?.posts || []).map(mapWordPressPost);
-
-  return DEFAULT_CATEGORY_NAMES.map((categoryName, index) => {
-    const wpCategory = wpCategories.find((category) => category.name === categoryName);
-    const categoryPosts = mappedPosts.filter((post) => post.category === categoryName);
-
-    return {
-      name: categoryName,
-      slug: wpCategory?.slug || `kategoria-${String.fromCharCode(97 + index)}`,
-      articles: categoryPosts,
-    };
-  });
-}
+import {
+  DEFAULT_CATEGORY_NAMES,
+  WORDPRESS_API,
+  buildCategories,
+  fallbackCategories,
+  mapWordPressPost,
+} from './wordpress';
 
 function App() {
   const [categories, setCategories] = useState(fallbackCategories);
@@ -147,7 +69,7 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [activeCategory]);
 
   useEffect(() => {
     if (recentPosts.length <= 1) {
@@ -163,10 +85,7 @@ function App() {
 
   const selectedCategory =
     categories.find((category) => category.name === activeCategory) ?? categories[0];
-
-  const heroHighlight = useMemo(() => {
-    return recentPosts[highlightIndex] || null;
-  }, [recentPosts, highlightIndex]);
+  const heroHighlight = useMemo(() => recentPosts[highlightIndex] || null, [recentPosts, highlightIndex]);
 
   const handleCategorySelect = (categoryName) => {
     setActiveCategory(categoryName);
@@ -263,11 +182,6 @@ function App() {
 
             <h1>{selectedArticle.title}</h1>
 
-            <div className="article-page__author">
-              <span>Nga {selectedArticle.author}</span>
-              <span>BIgNews</span>
-            </div>
-
             {selectedArticle.image ? (
               <img
                 className="article-page__image"
@@ -287,7 +201,9 @@ function App() {
               <p className="section-heading__kicker">Kategorite WordPress</p>
               <h2>Lajmet me te fundit ne hapesira te ndryshme</h2>
               {loadError ? <p className="section-heading__note">{loadError}</p> : null}
-              {loading ? <p className="section-heading__note">Po merren artikujt nga WordPress...</p> : null}
+              {loading ? (
+                <p className="section-heading__note">Po merren artikujt nga WordPress...</p>
+              ) : null}
             </section>
 
             <section className="categories-frame" aria-label="Kategorite e lajmeve">
@@ -315,11 +231,7 @@ function App() {
                   selectedCategory.articles.map((article) => (
                     <article className="article-card" key={article.id}>
                       {article.image ? (
-                        <img
-                          className="article-card__image"
-                          src={article.image}
-                          alt={article.title}
-                        />
+                        <img className="article-card__image" src={article.image} alt={article.title} />
                       ) : null}
                       <div className="article-card__meta">
                         <span className="article-card__label">{article.label}</span>
