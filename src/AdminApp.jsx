@@ -12,6 +12,7 @@ const AGENT_DRAFTS_KEY = 'bignews-agent-drafts';
 const AGENT_PRESETS_KEY = 'bignews-agent-presets';
 const AGENT_AUTOMATION_KEY = 'bignews-agent-automation';
 const WORDPRESS_CONNECTION_KEY = 'bignews-wordpress-connection';
+const PEXELS_CONNECTION_KEY = 'bignews-pexels-connection';
 const AGENT_SEEN_ITEMS_KEY = 'bignews-agent-seen-items';
 const DEFAULT_RSS_FEEDS = [
   'https://feeds.bbci.co.uk/news/rss.xml',
@@ -170,6 +171,14 @@ function AdminApp() {
     const saved = window.localStorage.getItem(WORDPRESS_CONNECTION_KEY);
     return saved ? JSON.parse(saved) : { site: WORDPRESS_SITE, token: '' };
   });
+  const [pexelsConnection, setPexelsConnection] = useState(() => {
+    if (typeof window === 'undefined') {
+      return { token: '' };
+    }
+
+    const saved = window.localStorage.getItem(PEXELS_CONNECTION_KEY);
+    return saved ? JSON.parse(saved) : { token: '' };
+  });
   const [agentMessage, setAgentMessage] = useState(
     'Paneli eshte gati per lidhje direkte me WordPress.com sapo te vendosesh site domain dhe access token.'
   );
@@ -207,6 +216,14 @@ function AdminApp() {
     });
   };
 
+  const updatePexelsConnection = (value) => {
+    setPexelsConnection(() => {
+      const next = { token: value };
+      window.localStorage.setItem(PEXELS_CONNECTION_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
   const rememberSeenItem = (link) => {
     if (!link) {
       return;
@@ -217,6 +234,24 @@ function AdminApp() {
       window.localStorage.setItem(AGENT_SEEN_ITEMS_KEY, JSON.stringify(next));
       return next;
     });
+  };
+
+  const handleManualImageUpload = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setManualForm((current) => ({
+        ...current,
+        image: typeof reader.result === 'string' ? reader.result : current.image,
+      }));
+      setAgentMessage(`Fotoja "${file.name}" u ngarkua nga device.`);
+    };
+    reader.readAsDataURL(file);
   };
 
   const saveDraft = () => {
@@ -330,6 +365,28 @@ function AdminApp() {
     );
   };
 
+  const fetchPexelsImage = async (query) => {
+    if (!pexelsConnection.token.trim()) {
+      return '';
+    }
+
+    const response = await fetch(
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape`,
+      {
+        headers: {
+          Authorization: pexelsConnection.token.trim(),
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Kerkimi i fotos ne Pexels deshtoi.');
+    }
+
+    const data = await response.json();
+    return data?.photos?.[0]?.src?.large2x || data?.photos?.[0]?.src?.large || '';
+  };
+
   const publishDirectly = async () => {
     if (!currentPreview) {
       setAgentMessage('Ploteso titullin dhe permbajtjen perpara publikimit.');
@@ -381,6 +438,8 @@ function AdminApp() {
     const title = translatedArticle.title;
     const excerpt = translatedArticle.excerpt;
     const body = buildAutomatedArticleBody(translatedArticle, row.category);
+    const pexelsImage = row.withImage ? await fetchPexelsImage(title) : '';
+    const finalImage = pexelsImage || (row.withImage ? article.image : '');
 
     const createdPost = await publishWordPressPost({
       token: wordpressConnection.token,
@@ -389,7 +448,7 @@ function AdminApp() {
       body,
       excerpt,
       category: row.category,
-      image: row.withImage ? article.image : '',
+      image: finalImage,
       status: automaticForm.directPublish ? 'publish' : 'draft',
     });
 
@@ -539,6 +598,25 @@ function AdminApp() {
                 value={wordpressConnection.token}
                 onChange={(event) => updateWordPressConnection('token', event.target.value)}
                 placeholder="Vendos access token-in"
+              />
+            </label>
+          </div>
+          <div className="admin-wordpress-connection">
+            <label className="agent-field">
+              <span>Pexels API token</span>
+              <input
+                type="password"
+                value={pexelsConnection.token}
+                onChange={(event) => updatePexelsConnection(event.target.value)}
+                placeholder="Vendos Pexels API token"
+              />
+            </label>
+            <label className="agent-field">
+              <span>Statusi i fotos automatike</span>
+              <input
+                type="text"
+                value={pexelsConnection.token.trim() ? 'Pexels gati per foto automatike' : 'Pa token Pexels'}
+                readOnly
               />
             </label>
           </div>
@@ -768,6 +846,24 @@ function AdminApp() {
                 placeholder="https://..."
               />
             </label>
+
+            {agentMode === 'manual' ? (
+              <label className="agent-field">
+                <span>Ose ngarko foto nga device</span>
+                <input type="file" accept="image/*" onChange={handleManualImageUpload} />
+              </label>
+            ) : null}
+
+            {agentMode === 'manual' && manualForm.image ? (
+              <div className="admin-upload-preview">
+                <span className="admin-upload-preview__label">Preview i fotos</span>
+                <img
+                  className="admin-upload-preview__image"
+                  src={manualForm.image}
+                  alt="Preview i fotos se artikullit"
+                />
+              </div>
+            ) : null}
           </div>
 
           <div className="admin-footer-actions">

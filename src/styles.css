@@ -436,9 +436,14 @@ input {
   z-index: 1;
   color: white;
   font-family: 'Archivo Black', sans-serif;
-  font-size: clamp(1.4rem, 2.6vw, 2.2rem);
+  font-size: clamp(1.05rem, 1.8vw, 1.7rem);
   line-height: 1.05;
-  max-width: 10ch;
+  max-width: 8ch;
+  max-height: calc(100% - 44px);
+  overflow: hidden;
+  word-break: break-word;
+  text-wrap: balance;
+  text-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 .hero__spotlight-frame--image {
@@ -569,6 +574,32 @@ input {
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.92);
   color: var(--text);
+}
+
+.agent-field input[type='file'] {
+  padding: 12px;
+  cursor: pointer;
+}
+
+.admin-upload-preview {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.admin-upload-preview__label {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.admin-upload-preview__image {
+  width: 100%;
+  max-height: 260px;
+  border-radius: 18px;
+  object-fit: cover;
 }
 
 .agent-suggestion {
@@ -942,6 +973,17 @@ input {
 
 .newsletter button {
   padding: 15px 22px;
+}
+
+.newsletter button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.newsletter__status {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
 }
 
 .sr-only {

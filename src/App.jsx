@@ -16,6 +16,11 @@ function App() {
   const [highlightIndex, setHighlightIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState('');
+  const [newsletterSending, setNewsletterSending] = useState(false);
+
+  const NEWSLETTER_ENDPOINT = 'https://formspree.io/f/xkokodvl';
 
   useEffect(() => {
     let cancelled = false;
@@ -100,6 +105,43 @@ function App() {
     setSelectedArticle(null);
   };
 
+  const handleNewsletterSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!newsletterEmail.trim()) {
+      setNewsletterStatus('Vendos email-in per abonim.');
+      return;
+    }
+
+    setNewsletterSending(true);
+    setNewsletterStatus('');
+
+    try {
+      const response = await fetch(NEWSLETTER_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          email: newsletterEmail.trim(),
+          source: 'BigNews Newsletter',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Dergimi i newsletter deshtoi.');
+      }
+
+      setNewsletterEmail('');
+      setNewsletterStatus('Faleminderit! Abonimi u dergua me sukses.');
+    } catch (error) {
+      setNewsletterStatus(error.message || 'Dergimi deshtoi. Provo perseri.');
+    } finally {
+      setNewsletterSending(false);
+    }
+  };
+
   return (
     <div className="page-shell">
       <header className="hero">
@@ -139,9 +181,7 @@ function App() {
                   <div
                     className="hero__spotlight-frame hero__spotlight-frame--image"
                     style={{ backgroundImage: `url(${heroHighlight.image})` }}
-                  >
-                    <span>{heroHighlight.title}</span>
-                  </div>
+                  />
                 ) : (
                   <div className="hero__spotlight-frame">
                     <span>{heroHighlight?.title || 'Pamja kryesore e dites'}</span>
@@ -198,7 +238,6 @@ function App() {
         ) : (
           <>
             <section className="section-heading">
-              <p className="section-heading__kicker">Kategorite WordPress</p>
               <h2>Lajmet me te fundit ne hapesira te ndryshme</h2>
               {loadError ? <p className="section-heading__note">{loadError}</p> : null}
               {loading ? (
@@ -273,12 +312,21 @@ function App() {
                 </p>
               </div>
 
-              <form className="newsletter__form">
+              <form className="newsletter__form" onSubmit={handleNewsletterSubmit}>
                 <label htmlFor="email" className="sr-only">
                   Email
                 </label>
-                <input id="email" type="email" placeholder="Shkruaj email-in tend" />
-                <button type="submit">Subscribe</button>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="Shkruaj email-in tend"
+                  value={newsletterEmail}
+                  onChange={(event) => setNewsletterEmail(event.target.value)}
+                />
+                <button type="submit" disabled={newsletterSending}>
+                  {newsletterSending ? 'Po dergohet...' : 'Subscribe'}
+                </button>
+                {newsletterStatus ? <p className="newsletter__status">{newsletterStatus}</p> : null}
               </form>
             </section>
           </>

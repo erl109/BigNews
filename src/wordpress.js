@@ -82,6 +82,21 @@ export function buildExcerpt(body) {
   return htmlToText(body).slice(0, 180).trim();
 }
 
+function extractFirstImageFromHtml(html) {
+  if (!html) {
+    return '';
+  }
+
+  if (typeof window === 'undefined') {
+    const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+    return match?.[1] || '';
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  return doc.querySelector('img')?.getAttribute('src') || '';
+}
+
 function sanitizeArticleHtml(html) {
   if (!html) {
     return '';
@@ -108,6 +123,11 @@ function sanitizeArticleHtml(html) {
 export function mapWordPressPost(post) {
   const categories = Object.values(post.categories || {});
   const primaryCategory = categories[0]?.name || 'Pa kategori';
+  const sanitizedBodyHtml = sanitizeArticleHtml(post.content || '');
+  const derivedImage =
+    post.featured_image ||
+    post.post_thumbnail?.URL ||
+    extractFirstImageFromHtml(sanitizedBodyHtml);
 
   return {
     id: post.ID,
@@ -115,8 +135,8 @@ export function mapWordPressPost(post) {
     excerpt: buildExcerpt(post.excerpt || post.content),
     time: formatPostTime(post.date),
     author: post.author?.name || 'Redaksia BIgNews',
-    bodyHtml: sanitizeArticleHtml(post.content || ''),
-    image: post.featured_image || post.post_thumbnail?.URL || '',
+    bodyHtml: sanitizedBodyHtml,
+    image: derivedImage,
     link: post.URL,
     category: primaryCategory,
     label: primaryCategory,
