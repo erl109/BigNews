@@ -117,17 +117,23 @@ function sanitizeArticleHtml(html) {
     }
   });
 
+  const firstImage = doc.querySelector('img');
+  if (firstImage) {
+    firstImage.remove();
+  }
+
   return doc.body.innerHTML;
 }
 
 export function mapWordPressPost(post) {
   const categories = Object.values(post.categories || {});
   const primaryCategory = categories[0]?.name || 'Pa kategori';
-  const sanitizedBodyHtml = sanitizeArticleHtml(post.content || '');
+  const rawBodyHtml = post.content || '';
+  const sanitizedBodyHtml = sanitizeArticleHtml(rawBodyHtml);
   const derivedImage =
     post.featured_image ||
     post.post_thumbnail?.URL ||
-    extractFirstImageFromHtml(sanitizedBodyHtml);
+    extractFirstImageFromHtml(rawBodyHtml);
 
   return {
     id: post.ID,
