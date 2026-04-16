@@ -134,7 +134,7 @@ export function mapWordPressPost(post) {
     title: htmlToText(post.title),
     excerpt: buildExcerpt(post.excerpt || post.content),
     time: formatPostTime(post.date),
-    author: post.author?.name || 'Redaksia BIgNews',
+    author: post.author?.name || 'Redaksia BigNews',
     bodyHtml: sanitizedBodyHtml,
     image: derivedImage,
     link: post.URL,

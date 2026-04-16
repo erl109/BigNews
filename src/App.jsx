@@ -148,7 +148,7 @@ function App() {
         <div className="hero__content">
           <div className="hero__main">
             <div className="hero__banner">
-              <img className="hero__logo" src={bigNewsLogo} alt="BIgNews logo" />
+              <img className="hero__logo" src={bigNewsLogo} alt="BigNews logo" />
             </div>
           </div>
 
@@ -303,9 +303,12 @@ function App() {
             </section>
 
             <section className="newsletter" aria-label="Newsletter subscription">
-              <div className="newsletter__copy">
-                <p className="section-heading__kicker">Newsletter</p>
-                <h2>Abonohu per te marre lajmet me te fundit nga BIgNews</h2>
+                  <div className="newsletter__copy">
+                    <p className="section-heading__kicker">Newsletter</p>
+                    <h2>
+                  Abonohu per te marre lajmet me te fundit nga{' '}
+                  <span className="newsletter__brand">BigNews</span>
+                    </h2>
                 <p>
                   Vendos email-in tend dhe merr permbledhje periodike me historite
                   me te rendesishme direkt ne inbox.

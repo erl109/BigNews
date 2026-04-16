@@ -553,7 +553,7 @@ function AdminApp() {
     <div className="admin-shell">
       <header className="admin-topbar">
         <div className="admin-brand">
-          <img src={bigNewsLogo} alt="BIgNews logo" />
+          <img src={bigNewsLogo} alt="BigNews logo" />
           <div>
             <p className="admin-eyebrow">PulseMag Basic Panel</p>
             <h1>Krijo nje postim te ri</h1>

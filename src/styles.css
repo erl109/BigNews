@@ -950,6 +950,10 @@ input {
   line-height: 1.7;
 }
 
+.newsletter__brand {
+  font-size: 0.82em;
+}
+
 .newsletter__form {
   display: flex;
   flex-direction: column;
