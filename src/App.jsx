@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import bigNewsLogo from './assets/bignews-logo.png';
+import cornerLogo from './assets/corner-logo.jpg';
 import {
   DEFAULT_CATEGORY_NAMES,
   WORDPRESS_API,
@@ -143,199 +144,206 @@ function App() {
   };
 
   return (
-    <div className="page-shell">
-      <header className="hero">
-        <div className="hero__content">
-          <div className="hero__main">
-            <div className="hero__banner">
-              <img className="hero__logo" src={bigNewsLogo} alt="BigNews logo" />
-            </div>
-          </div>
+    <>
+      <div className="page-corners" aria-hidden="true">
+        <img className="page-corners__logo page-corners__logo--left" src={cornerLogo} alt="" />
+        <img className="page-corners__logo page-corners__logo--right" src={cornerLogo} alt="" />
+      </div>
 
-          {!selectedArticle ? (
-            <aside className="hero__spotlight">
-              <div className="hero__spotlight-copy">
-                <p className="spotlight__label">Highlight</p>
-                <h2>
-                  {heroHighlight?.title ||
-                    'Publiko artikullin e pare ne WordPress qe te shfaqet ketu.'}
-                </h2>
-                <p>
-                  {heroHighlight?.excerpt ||
-                    'Kjo zone do te mbushet automatikisht nga postimi me i fundit ne WordPress.'}
-                </p>
-                {heroHighlight ? (
-                  <button
-                    type="button"
-                    className="hero__spotlight-button"
-                    onClick={() => handleArticleOpen(heroHighlight)}
-                  >
-                    Lexo artikullin
-                  </button>
-                ) : null}
+      <div className="page-shell">
+        <header className="hero">
+          <div className="hero__content">
+            <div className="hero__main">
+              <div className="hero__banner">
+                <img className="hero__logo" src={bigNewsLogo} alt="BigNews logo" />
               </div>
-
-              <div className="hero__spotlight-image" aria-label="Foto e artikullit highlight">
-                <span className="hero__spotlight-badge">Foto Artikulli</span>
-                {heroHighlight?.image ? (
-                  <div
-                    className="hero__spotlight-frame hero__spotlight-frame--image"
-                    style={{ backgroundImage: `url(${heroHighlight.image})` }}
-                  />
-                ) : (
-                  <div className="hero__spotlight-frame">
-                    <span>{heroHighlight?.title || 'Pamja kryesore e dites'}</span>
-                  </div>
-                )}
-                {recentPosts.length > 1 ? (
-                  <div className="hero__spotlight-controls">
-                    {recentPosts.slice(0, 10).map((post, index) => (
-                      <button
-                        type="button"
-                        key={post.id}
-                        className={`hero__spotlight-dot ${
-                          index === highlightIndex ? 'hero__spotlight-dot--active' : ''
-                        }`}
-                        aria-label={`Shfaq artikullin ${index + 1}`}
-                        onClick={() => setHighlightIndex(index)}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            </aside>
-          ) : null}
-        </div>
-      </header>
-
-      <main className="content">
-        {selectedArticle ? (
-          <article className="article-page">
-            <button type="button" className="article-page__back" onClick={handleBackToHome}>
-              Kthehu te artikujt
-            </button>
-
-            <div className="article-page__header">
-              <span className="article-page__tag">{selectedArticle.category}</span>
-              <span className="article-page__time">{selectedArticle.time}</span>
             </div>
 
-            <h1>{selectedArticle.title}</h1>
-
-            {selectedArticle.image ? (
-              <img
-                className="article-page__image"
-                src={selectedArticle.image}
-                alt={selectedArticle.title}
-              />
-            ) : null}
-
-            <div
-              className="article-page__body"
-              dangerouslySetInnerHTML={{ __html: selectedArticle.bodyHtml }}
-            />
-          </article>
-        ) : (
-          <>
-            <section className="section-heading">
-              <h2>Lajmet me te fundit ne hapesira te ndryshme</h2>
-              {loadError ? <p className="section-heading__note">{loadError}</p> : null}
-              {loading ? (
-                <p className="section-heading__note">Po merren artikujt nga WordPress...</p>
-              ) : null}
-            </section>
-
-            <section className="categories-frame" aria-label="Kategorite e lajmeve">
-              <div className="category-pills" role="tablist" aria-label="Zgjidh kategorine">
-                {categories.map((category) => {
-                  const isActive = category.name === activeCategory;
-
-                  return (
+            {!selectedArticle ? (
+              <aside className="hero__spotlight">
+                <div className="hero__spotlight-copy">
+                  <p className="spotlight__label">Highlight</p>
+                  <h2>
+                    {heroHighlight?.title ||
+                      'Publiko artikullin e pare ne WordPress qe te shfaqet ketu.'}
+                  </h2>
+                  <p>
+                    {heroHighlight?.excerpt ||
+                      'Kjo zone do te mbushet automatikisht nga postimi me i fundit ne WordPress.'}
+                  </p>
+                  {heroHighlight ? (
                     <button
                       type="button"
-                      role="tab"
-                      aria-selected={isActive}
-                      key={category.name}
-                      className={`category-pill ${isActive ? 'category-pill--active' : ''}`}
-                      onClick={() => handleCategorySelect(category.name)}
+                      className="hero__spotlight-button"
+                      onClick={() => handleArticleOpen(heroHighlight)}
                     >
-                      {category.name}
+                      Lexo artikullin
                     </button>
-                  );
-                })}
+                  ) : null}
+                </div>
+
+                <div className="hero__spotlight-image" aria-label="Foto e artikullit highlight">
+                  <span className="hero__spotlight-badge">Foto Artikulli</span>
+                  {heroHighlight?.image ? (
+                    <div
+                      className="hero__spotlight-frame hero__spotlight-frame--image"
+                      style={{ backgroundImage: `url(${heroHighlight.image})` }}
+                    />
+                  ) : (
+                    <div className="hero__spotlight-frame">
+                      <span>{heroHighlight?.title || 'Pamja kryesore e dites'}</span>
+                    </div>
+                  )}
+                  {recentPosts.length > 1 ? (
+                    <div className="hero__spotlight-controls">
+                      {recentPosts.slice(0, 10).map((post, index) => (
+                        <button
+                          type="button"
+                          key={post.id}
+                          className={`hero__spotlight-dot ${
+                            index === highlightIndex ? 'hero__spotlight-dot--active' : ''
+                          }`}
+                          aria-label={`Shfaq artikullin ${index + 1}`}
+                          onClick={() => setHighlightIndex(index)}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </aside>
+            ) : null}
+          </div>
+        </header>
+
+        <main className="content">
+          {selectedArticle ? (
+            <article className="article-page">
+              <button type="button" className="article-page__back" onClick={handleBackToHome}>
+                Kthehu te artikujt
+              </button>
+
+              <div className="article-page__header">
+                <span className="article-page__tag">{selectedArticle.category}</span>
+                <span className="article-page__time">{selectedArticle.time}</span>
               </div>
 
-              <div className="articles-showcase">
-                {selectedCategory?.articles?.length ? (
-                  selectedCategory.articles.map((article) => (
-                    <article className="article-card" key={article.id}>
-                      {article.image ? (
-                        <img className="article-card__image" src={article.image} alt={article.title} />
-                      ) : null}
-                      <div className="article-card__meta">
-                        <span className="article-card__label">{article.label}</span>
-                        <span>{article.time}</span>
-                      </div>
-                      <h3>{article.title}</h3>
-                      <p>{article.excerpt}</p>
+              <h1>{selectedArticle.title}</h1>
+
+              {selectedArticle.image ? (
+                <img
+                  className="article-page__image"
+                  src={selectedArticle.image}
+                  alt={selectedArticle.title}
+                />
+              ) : null}
+
+              <div
+                className="article-page__body"
+                dangerouslySetInnerHTML={{ __html: selectedArticle.bodyHtml }}
+              />
+            </article>
+          ) : (
+            <>
+              <section className="section-heading">
+                <h2>Lajmet me te fundit ne hapesira te ndryshme</h2>
+                {loadError ? <p className="section-heading__note">{loadError}</p> : null}
+                {loading ? (
+                  <p className="section-heading__note">Po merren artikujt nga WordPress...</p>
+                ) : null}
+              </section>
+
+              <section className="categories-frame" aria-label="Kategorite e lajmeve">
+                <div className="category-pills" role="tablist" aria-label="Zgjidh kategorine">
+                  {categories.map((category) => {
+                    const isActive = category.name === activeCategory;
+
+                    return (
                       <button
                         type="button"
-                        className="article-card__button"
-                        onClick={() => handleArticleOpen(article)}
+                        role="tab"
+                        aria-selected={isActive}
+                        key={category.name}
+                        className={`category-pill ${isActive ? 'category-pill--active' : ''}`}
+                        onClick={() => handleCategorySelect(category.name)}
                       >
-                        Lexo artikullin
+                        {category.name}
                       </button>
+                    );
+                  })}
+                </div>
+
+                <div className="articles-showcase">
+                  {selectedCategory?.articles?.length ? (
+                    selectedCategory.articles.map((article) => (
+                      <article className="article-card" key={article.id}>
+                        {article.image ? (
+                          <img className="article-card__image" src={article.image} alt={article.title} />
+                        ) : null}
+                        <div className="article-card__meta">
+                          <span className="article-card__label">{article.label}</span>
+                          <span>{article.time}</span>
+                        </div>
+                        <h3>{article.title}</h3>
+                        <p>{article.excerpt}</p>
+                        <button
+                          type="button"
+                          className="article-card__button"
+                          onClick={() => handleArticleOpen(article)}
+                        >
+                          Lexo artikullin
+                        </button>
+                      </article>
+                    ))
+                  ) : (
+                    <article className="article-card article-card--empty">
+                      <div className="article-card__meta">
+                        <span className="article-card__label">{selectedCategory?.name}</span>
+                      </div>
+                      <h3>Nuk ka ende artikuj ne kete kategori.</h3>
+                      <p>
+                        Krijo nje postim ne WordPress dhe caktoje ne kete kategori qe te shfaqet
+                        automatikisht ketu.
+                      </p>
                     </article>
-                  ))
-                ) : (
-                  <article className="article-card article-card--empty">
-                    <div className="article-card__meta">
-                      <span className="article-card__label">{selectedCategory?.name}</span>
-                    </div>
-                    <h3>Nuk ka ende artikuj ne kete kategori.</h3>
-                    <p>
-                      Krijo nje postim ne WordPress dhe caktoje ne kete kategori qe te shfaqet
-                      automatikisht ketu.
-                    </p>
-                  </article>
-                )}
-              </div>
-            </section>
+                  )}
+                </div>
+              </section>
 
-            <section className="newsletter" aria-label="Newsletter subscription">
-                  <div className="newsletter__copy">
-                    <p className="section-heading__kicker">Newsletter</p>
-                    <h2>
-                  Abonohu per te marre lajmet me te fundit nga{' '}
-                  <span className="newsletter__brand">BigNews</span>
-                    </h2>
-                <p>
-                  Vendos email-in tend dhe merr permbledhje periodike me historite
-                  me te rendesishme direkt ne inbox.
-                </p>
-              </div>
+              <section className="newsletter" aria-label="Newsletter subscription">
+                <div className="newsletter__copy">
+                  <p className="section-heading__kicker">Newsletter</p>
+                  <h2>
+                    Abonohu per te marre lajmet me te fundit nga{' '}
+                    <span className="newsletter__brand">BigNews</span>
+                  </h2>
+                  <p>
+                    Vendos email-in tend dhe merr permbledhje periodike me historite
+                    me te rendesishme direkt ne inbox.
+                  </p>
+                </div>
 
-              <form className="newsletter__form" onSubmit={handleNewsletterSubmit}>
-                <label htmlFor="email" className="sr-only">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  placeholder="Shkruaj email-in tend"
-                  value={newsletterEmail}
-                  onChange={(event) => setNewsletterEmail(event.target.value)}
-                />
-                <button type="submit" disabled={newsletterSending}>
-                  {newsletterSending ? 'Po dergohet...' : 'Subscribe'}
-                </button>
-                {newsletterStatus ? <p className="newsletter__status">{newsletterStatus}</p> : null}
-              </form>
-            </section>
-          </>
-        )}
-      </main>
-    </div>
+                <form className="newsletter__form" onSubmit={handleNewsletterSubmit}>
+                  <label htmlFor="email" className="sr-only">
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder="Shkruaj email-in tend"
+                    value={newsletterEmail}
+                    onChange={(event) => setNewsletterEmail(event.target.value)}
+                  />
+                  <button type="submit" disabled={newsletterSending}>
+                    {newsletterSending ? 'Po dergohet...' : 'Subscribe'}
+                  </button>
+                  {newsletterStatus ? <p className="newsletter__status">{newsletterStatus}</p> : null}
+                </form>
+              </section>
+            </>
+          )}
+        </main>
+      </div>
+    </>
   );
 }
 

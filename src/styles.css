@@ -31,12 +31,40 @@ body {
     linear-gradient(180deg, #faf6ff 0%, var(--bg) 48%, #ede2ff 100%);
 }
 
+.page-corners {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page-corners__logo {
+  position: fixed;
+  top: 50%;
+  width: clamp(88px, 9vw, 132px);
+  height: auto;
+  opacity: 0.95;
+  transform: translateY(-50%);
+  filter: drop-shadow(0 16px 28px rgba(92, 58, 143, 0.16));
+}
+
+.page-corners__logo--left {
+  left: 18px;
+}
+
+.page-corners__logo--right {
+  right: 18px;
+  transform: translateY(-50%) scaleX(-1);
+}
+
 button,
 input {
   font: inherit;
 }
 
 .page-shell {
+  position: relative;
+  z-index: 1;
   width: min(1200px, calc(100% - 32px));
   margin: 0 auto;
   padding: 24px 0 48px;
@@ -1041,6 +1069,10 @@ input {
 }
 
 @media (max-width: 720px) {
+  .page-corners {
+    display: none;
+  }
+
   .page-shell {
     width: min(100% - 20px, 1200px);
     padding-top: 12px;
