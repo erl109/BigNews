@@ -1,12 +1,22 @@
 export const WORDPRESS_SITE = 'bignews9.wordpress.com';
 export const WORDPRESS_API = `https://public-api.wordpress.com/rest/v1.1/sites/${WORDPRESS_SITE}`;
 export const DEFAULT_CATEGORY_NAMES = [
-  'KATEGORIA A',
-  'KATEGORIA B',
-  'KATEGORIA C',
-  'KATEGORIA D',
-  'KATEGORIA E',
+  'Politika&Aktualiteti',
+  'Ekonomi&Sociale',
+  'Kosove&Rajon',
+  'Bota&Teknologjia',
+  'Art&Shendet',
+  'Foto&Video',
 ];
+
+export const CATEGORY_SUBCATEGORY_MAP = {
+  'Politika&Aktualiteti': ['Politika', 'Aktualiteti'],
+  'Ekonomi&Sociale': ['Ekonomi', 'Sociale'],
+  'Kosove&Rajon': ['Kosove', 'Rajon'],
+  'Bota&Teknologjia': ['Bota', 'Teknologjia'],
+  'Art&Shendet': ['Art', 'Shendet'],
+  'Foto&Video': ['Foto', 'Video'],
+};
 
 export const fallbackCategories = DEFAULT_CATEGORY_NAMES.map((name, index) => ({
   name,
@@ -15,11 +25,66 @@ export const fallbackCategories = DEFAULT_CATEGORY_NAMES.map((name, index) => ({
 }));
 
 export const CATEGORY_RULES = {
-  'KATEGORIA A': ['lajm', 'breaking', 'qeveri', 'bashki', 'zhvillim', 'urgjent'],
-  'KATEGORIA B': ['turizem', 'biznes', 'ekonomi', 'investim', 'teknologji', 'digital'],
-  'KATEGORIA C': ['analize', 'koment', 'shpjegim', 'fokus', 'trend', 'opinion'],
-  'KATEGORIA D': ['komunitet', 'lokal', 'shkolle', 'banore', 'sociale', 'kulture'],
-  'KATEGORIA E': ['speciale', 'interviste', 'ekskluzive', 'reportazh', 'seri', 'profil'],
+  'Politika&Aktualiteti': [
+    'politike',
+    'qeveri',
+    'parlament',
+    'zgjedhje',
+    'aktualitet',
+    'ministri',
+    'president',
+    'kryeminister',
+  ],
+  'Ekonomi&Sociale': [
+    'ekonomi',
+    'biznes',
+    'sociale',
+    'punesim',
+    'cmim',
+    'inflacion',
+    'page',
+    'mireqenie',
+  ],
+  'Kosove&Rajon': [
+    'kosove',
+    'kosova',
+    'prishtine',
+    'ballkan',
+    'rajon',
+    'shkup',
+    'tirane',
+    'podgorice',
+  ],
+  'Bota&Teknologjia': [
+    'bota',
+    'nderkombetare',
+    'teknologji',
+    'ai',
+    'digital',
+    'telefon',
+    'software',
+    'internet',
+  ],
+  'Art&Shendet': [
+    'art',
+    'kulture',
+    'muzike',
+    'film',
+    'shendet',
+    'mjekesi',
+    'spital',
+    'wellness',
+  ],
+  'Foto&Video': [
+    'foto',
+    'video',
+    'galeri',
+    'pamje',
+    'vizuale',
+    'reportazh',
+    'klip',
+    'kamera',
+  ],
 };
 
 export function htmlToText(html) {
@@ -125,9 +190,60 @@ function sanitizeArticleHtml(html) {
   return doc.body.innerHTML;
 }
 
+export function getSubcategoriesForCategory(categoryName) {
+  return CATEGORY_SUBCATEGORY_MAP[categoryName] || [];
+}
+
+export function resolveMainCategory(categoryName) {
+  if (!categoryName) {
+    return DEFAULT_CATEGORY_NAMES[0];
+  }
+
+  if (DEFAULT_CATEGORY_NAMES.includes(categoryName)) {
+    return categoryName;
+  }
+
+  const normalizedCategory = normalizeText(categoryName);
+
+  for (const [mainCategory, subcategories] of Object.entries(CATEGORY_SUBCATEGORY_MAP)) {
+    if (subcategories.some((subcategory) => normalizeText(subcategory) === normalizedCategory)) {
+      return mainCategory;
+    }
+  }
+
+  return categoryName;
+}
+
+export function buildCategoryPayload(category, subcategory = '') {
+  const categories = [category, subcategory]
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  return categories.join(',');
+}
+
+function normalizeCategoryName(name) {
+  return htmlToText(name || '').trim();
+}
+
+function findSubcategoryForPost(categoryNames, mainCategory) {
+  const subcategories = getSubcategoriesForCategory(mainCategory);
+
+  return (
+    categoryNames.find((categoryName) =>
+      subcategories.some(
+        (subcategory) => normalizeText(subcategory) === normalizeText(normalizeCategoryName(categoryName))
+      )
+    ) || ''
+  );
+}
+
 export function mapWordPressPost(post) {
   const categories = Object.values(post.categories || {});
-  const primaryCategory = categories[0]?.name || 'Pa kategori';
+  const categoryNames = categories.map((category) => normalizeCategoryName(category.name));
+  const primaryCategory = categoryNames[0] || 'Pa kategori';
+  const mainCategory = resolveMainCategory(primaryCategory);
+  const subcategory = findSubcategoryForPost(categoryNames, mainCategory);
   const rawBodyHtml = post.content || '';
   const sanitizedBodyHtml = sanitizeArticleHtml(rawBodyHtml);
   const derivedImage =
@@ -144,23 +260,27 @@ export function mapWordPressPost(post) {
     bodyHtml: sanitizedBodyHtml,
     image: derivedImage,
     link: post.URL,
-    category: primaryCategory,
-    label: primaryCategory,
+    category: mainCategory,
+    subcategory,
+    label: subcategory || primaryCategory,
   };
 }
 
 export function buildCategories(categoriesResponse, postsResponse) {
   const wpCategories = (categoriesResponse?.categories || [])
-    .filter((category) => DEFAULT_CATEGORY_NAMES.includes(category.name))
+    .filter((category) => DEFAULT_CATEGORY_NAMES.includes(resolveMainCategory(category.name)))
     .sort(
       (left, right) =>
-        DEFAULT_CATEGORY_NAMES.indexOf(left.name) - DEFAULT_CATEGORY_NAMES.indexOf(right.name)
+        DEFAULT_CATEGORY_NAMES.indexOf(resolveMainCategory(left.name)) -
+        DEFAULT_CATEGORY_NAMES.indexOf(resolveMainCategory(right.name))
     );
 
   const mappedPosts = (postsResponse?.posts || []).map(mapWordPressPost);
 
   return DEFAULT_CATEGORY_NAMES.map((categoryName, index) => {
-    const wpCategory = wpCategories.find((category) => category.name === categoryName);
+    const wpCategory = wpCategories.find(
+      (category) => resolveMainCategory(category.name) === categoryName
+    );
     const categoryPosts = mappedPosts.filter((post) => post.category === categoryName);
 
     return {

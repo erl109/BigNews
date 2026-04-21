@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import bigNewsLogo from './assets/bignews-logo.png';
 import {
+  buildCategoryPayload,
   DEFAULT_CATEGORY_NAMES,
   WORDPRESS_SITE,
   buildExcerpt,
   detectCategory,
+  getSubcategoriesForCategory,
   publishWordPressPost,
 } from './wordpress';
 
@@ -57,19 +59,21 @@ function buildAgentPreview(form, mode) {
 
 function buildCategoryAngle(category) {
   const angles = {
-    'KATEGORIA A':
+    'Politika&Aktualiteti':
       'Zhvillimi hyn ne grupin e lajmeve me ndikim te menjehershem dhe kerkon ndjekje te vazhdueshme per reagimet qe mund te pasojne.',
-    'KATEGORIA B':
+    'Ekonomi&Sociale':
       'Kjo histori ka peshe ne fushen e ekonomise, investimeve dhe zhvillimeve qe ndikojne drejtperdrejt ne vendimmarrjen e publikut.',
-    'KATEGORIA C':
+    'Kosove&Rajon':
       'Ngjarja ofron hapesire per analize dhe interpretim me te thelle, sidomos per ndikimin qe mund te kete ne debatin publik.',
-    'KATEGORIA D':
+    'Bota&Teknologjia':
       'Ne dimensionin social dhe lokal, kjo ceshtje lidhet me menyren si komunitetet reagojne ndaj zhvillimeve te reja.',
-    'KATEGORIA E':
+    'Art&Shendet':
       'Si histori me kend te vecante, ajo sjell elemente qe terheqin vemendjen e lexuesit pertej lajmit te shkurter te momentit.',
+    'Foto&Video':
+      'Ky zhvillim ka vlere te forte vizuale dhe kerkon prezantim qe e afron lexuesin me materialin pamor dhe ritmin e ngjarjes.',
   };
 
-  return angles[category] || angles['KATEGORIA A'];
+  return angles[category] || angles['Politika&Aktualiteti'];
 }
 
 function buildAutomatedArticleBody(article, category) {
@@ -114,6 +118,7 @@ function AdminApp() {
     body: '',
     image: '',
     category: DEFAULT_CATEGORY_NAMES[0],
+    subcategory: '',
     saveDraft: true,
     directPublish: false,
   });
@@ -192,6 +197,10 @@ function AdminApp() {
   const readyAutomationRows = useMemo(
     () => automationRows.filter((row) => row.status === 'Ready' && row.category.trim()),
     [automationRows]
+  );
+  const manualSubcategories = useMemo(
+    () => getSubcategoriesForCategory(manualForm.category),
+    [manualForm.category]
   );
 
   useEffect(() => {
@@ -275,6 +284,9 @@ function AdminApp() {
     const payload = [
       `Titulli: ${currentPreview.title}`,
       `Kategoria: ${currentPreview.category}`,
+      agentMode === 'manual' && manualForm.subcategory
+        ? `Nenkategoria: ${manualForm.subcategory}`
+        : '',
       '',
       currentPreview.body || currentPreview.excerpt,
       currentPreview.image ? `Foto: ${currentPreview.image}` : '',
@@ -407,7 +419,10 @@ function AdminApp() {
         title: currentPreview.title,
         body: currentPreview.body || currentPreview.excerpt,
         excerpt: currentPreview.excerpt,
-        category: currentPreview.category,
+        category: buildCategoryPayload(
+          currentPreview.category,
+          agentMode === 'manual' ? manualForm.subcategory : ''
+        ),
         image: currentPreview.image,
         status: currentPreview.directPublish ? 'publish' : 'draft',
       });
@@ -447,7 +462,7 @@ function AdminApp() {
       title,
       body,
       excerpt,
-      category: row.category,
+      category: buildCategoryPayload(row.category, row.subcategory),
       image: finalImage,
       status: automaticForm.directPublish ? 'publish' : 'draft',
     });
@@ -455,6 +470,8 @@ function AdminApp() {
     rememberSeenItem(article.link);
     setAgentMessage(
       `Hapi ${row.id} u ekzekutua me sukses. Artikulli "${createdPost?.title || title}" u mor nga ${article.source}, u perkthye ne shqip dhe u publikua te ${row.category} si ${
+        row.subcategory ? `${row.subcategory} / ` : ''
+      }${
         automaticForm.directPublish ? 'published' : 'draft'
       }.`
     );
@@ -675,7 +692,10 @@ function AdminApp() {
                 <span>{activeAutomationStep === row.id ? `Hapi ${row.id} - Ne pune` : `Hapi ${row.id}`}</span>
                 <select
                   value={row.category}
-                  onChange={(event) => updateAutomationRow(row.id, 'category', event.target.value)}
+                  onChange={(event) => {
+                    updateAutomationRow(row.id, 'category', event.target.value);
+                    updateAutomationRow(row.id, 'subcategory', '');
+                  }}
                 >
                   <option value="">Zgjidh kategorine</option>
                   {DEFAULT_CATEGORY_NAMES.map((categoryName) => (
@@ -684,12 +704,17 @@ function AdminApp() {
                     </option>
                   ))}
                 </select>
-                <input
-                  type="text"
+                <select
                   value={row.subcategory}
                   onChange={(event) => updateAutomationRow(row.id, 'subcategory', event.target.value)}
-                  placeholder="Nenkategoria"
-                />
+                >
+                  <option value="">Zgjidh nenkategorine</option>
+                  {getSubcategoriesForCategory(row.category).map((subcategory) => (
+                    <option key={subcategory} value={subcategory}>
+                      {subcategory}
+                    </option>
+                  ))}
+                </select>
                 <input
                   type="number"
                   min="1"
@@ -800,7 +825,11 @@ function AdminApp() {
                         : 'admin-category-button'
                     }
                     onClick={() =>
-                      setManualForm((current) => ({ ...current, category: categoryName }))
+                      setManualForm((current) => ({
+                        ...current,
+                        category: categoryName,
+                        subcategory: '',
+                      }))
                     }
                   >
                     {categoryName}
@@ -811,7 +840,19 @@ function AdminApp() {
 
             <label className="agent-field">
               <span>Nenkategoria</span>
-              <input type="text" placeholder="Zgjidh nenkategorine" />
+              <select
+                value={manualForm.subcategory}
+                onChange={(event) =>
+                  setManualForm((current) => ({ ...current, subcategory: event.target.value }))
+                }
+              >
+                <option value="">Zgjidh nenkategorine</option>
+                {manualSubcategories.map((subcategory) => (
+                  <option key={subcategory} value={subcategory}>
+                    {subcategory}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <label className="agent-field">

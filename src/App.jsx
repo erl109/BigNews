@@ -6,13 +6,18 @@ import {
   WORDPRESS_API,
   buildCategories,
   fallbackCategories,
+  getSubcategoriesForCategory,
   mapWordPressPost,
+  normalizeText,
 } from './wordpress';
 
 function App() {
   const [categories, setCategories] = useState(fallbackCategories);
   const [recentPosts, setRecentPosts] = useState([]);
   const [activeCategory, setActiveCategory] = useState(DEFAULT_CATEGORY_NAMES[0]);
+  const [activeSubcategory, setActiveSubcategory] = useState(
+    getSubcategoriesForCategory(DEFAULT_CATEGORY_NAMES[0])[0] || ''
+  );
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [highlightIndex, setHighlightIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -91,10 +96,27 @@ function App() {
 
   const selectedCategory =
     categories.find((category) => category.name === activeCategory) ?? categories[0];
+  const availableSubcategories = useMemo(
+    () => getSubcategoriesForCategory(activeCategory),
+    [activeCategory]
+  );
+  const filteredArticles = useMemo(() => {
+    const articles = selectedCategory?.articles || [];
+
+    if (!activeSubcategory) {
+      return articles;
+    }
+
+    return articles.filter(
+      (article) =>
+        normalizeText(article.subcategory || article.label) === normalizeText(activeSubcategory)
+    );
+  }, [activeSubcategory, selectedCategory]);
   const heroHighlight = useMemo(() => recentPosts[highlightIndex] || null, [recentPosts, highlightIndex]);
 
   const handleCategorySelect = (categoryName) => {
     setActiveCategory(categoryName);
+    setActiveSubcategory(getSubcategoriesForCategory(categoryName)[0] || '');
     setSelectedArticle(null);
   };
 
@@ -105,6 +127,23 @@ function App() {
   const handleBackToHome = () => {
     setSelectedArticle(null);
   };
+
+  useEffect(() => {
+    if (!availableSubcategories.length) {
+      if (activeSubcategory !== '') {
+        setActiveSubcategory('');
+      }
+      return;
+    }
+
+    const subcategoryExists = availableSubcategories.some(
+      (subcategory) => normalizeText(subcategory) === normalizeText(activeSubcategory)
+    );
+
+    if (!subcategoryExists) {
+      setActiveSubcategory(availableSubcategories[0]);
+    }
+  }, [activeSubcategory, availableSubcategories]);
 
   const handleNewsletterSubmit = async (event) => {
     event.preventDefault();
@@ -272,9 +311,26 @@ function App() {
                   })}
                 </div>
 
+                {availableSubcategories.length ? (
+                  <div className="subcategory-pills" aria-label="Zgjidh nenkategorine">
+                    {availableSubcategories.map((subcategory) => (
+                      <button
+                        type="button"
+                        key={subcategory}
+                        className={`subcategory-pill ${
+                          activeSubcategory === subcategory ? 'subcategory-pill--active' : ''
+                        }`}
+                        onClick={() => setActiveSubcategory(subcategory)}
+                      >
+                        {subcategory}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+
                 <div className="articles-showcase">
-                  {selectedCategory?.articles?.length ? (
-                    selectedCategory.articles.map((article) => (
+                  {filteredArticles.length ? (
+                    filteredArticles.map((article) => (
                       <article className="article-card" key={article.id}>
                         {article.image ? (
                           <img className="article-card__image" src={article.image} alt={article.title} />
@@ -297,11 +353,14 @@ function App() {
                   ) : (
                     <article className="article-card article-card--empty">
                       <div className="article-card__meta">
-                        <span className="article-card__label">{selectedCategory?.name}</span>
+                        <span className="article-card__label">
+                          {activeSubcategory || selectedCategory?.name}
+                        </span>
                       </div>
                       <h3>Nuk ka ende artikuj ne kete kategori.</h3>
                       <p>
-                        Krijo nje postim ne WordPress dhe caktoje ne kete kategori qe te shfaqet
+                        Krijo nje postim ne WordPress dhe caktoje ne kete kategori
+                        {activeSubcategory ? ` / ${activeSubcategory}` : ''} qe te shfaqet
                         automatikisht ketu.
                       </p>
                     </article>

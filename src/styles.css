@@ -753,6 +753,13 @@ input {
   gap: 14px;
 }
 
+.subcategory-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
 .articles-showcase {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -761,6 +768,7 @@ input {
 }
 
 .category-pill,
+.subcategory-pill,
 .newsletter button {
   border: 0;
   border-radius: 999px;
@@ -789,6 +797,26 @@ input {
 .category-pill:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 28px rgba(55, 36, 15, 0.12);
+}
+
+.subcategory-pill {
+  padding: 12px 18px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--muted);
+  font-size: 0.94rem;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(73, 51, 116, 0.08);
+}
+
+.subcategory-pill--active {
+  background: rgba(156, 89, 209, 0.14);
+  color: var(--accent-dark);
+  box-shadow: inset 0 0 0 1px rgba(156, 89, 209, 0.22);
+}
+
+.subcategory-pill:hover {
+  transform: translateY(-1px);
+  color: var(--accent-dark);
 }
 
 .article-card {
@@ -1107,6 +1135,11 @@ input {
   }
 
   .category-pill {
+    width: 100%;
+    text-align: center;
+  }
+
+  .subcategory-pill {
     width: 100%;
     text-align: center;
   }
