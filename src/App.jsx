@@ -20,6 +20,7 @@ function App() {
   );
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [highlightIndex, setHighlightIndex] = useState(0);
+  const [categoryHighlightIndexes, setCategoryHighlightIndexes] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -112,7 +113,22 @@ function App() {
         normalizeText(article.subcategory || article.label) === normalizeText(activeSubcategory)
     );
   }, [activeSubcategory, selectedCategory]);
+  const categoryHighlights = useMemo(
+    () =>
+      categories.map((category) => ({
+        ...category,
+        latestArticles: (category.articles || []).slice(0, 5),
+      })),
+    [categories]
+  );
   const heroHighlight = useMemo(() => recentPosts[highlightIndex] || null, [recentPosts, highlightIndex]);
+
+  const setCategoryHighlightIndex = (categoryName, index) => {
+    setCategoryHighlightIndexes((current) => ({
+      ...current,
+      [categoryName]: index,
+    }));
+  };
 
   const handleCategorySelect = (categoryName) => {
     setActiveCategory(categoryName);
@@ -292,41 +308,46 @@ function App() {
               </section>
 
               <section className="categories-frame" aria-label="Kategorite e lajmeve">
-                <div className="category-pills" role="tablist" aria-label="Zgjidh kategorine">
+                <div className="category-groups" role="tablist" aria-label="Zgjidh kategorine">
                   {categories.map((category) => {
                     const isActive = category.name === activeCategory;
+                    const categorySubcategories = getSubcategoriesForCategory(category.name);
 
                     return (
-                      <button
-                        type="button"
-                        role="tab"
-                        aria-selected={isActive}
+                      <div
                         key={category.name}
-                        className={`category-pill ${isActive ? 'category-pill--active' : ''}`}
-                        onClick={() => handleCategorySelect(category.name)}
+                        className={`category-group ${isActive ? 'category-group--active' : ''}`}
                       >
-                        {category.name}
-                      </button>
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={isActive}
+                          className={`category-pill ${isActive ? 'category-pill--active' : ''}`}
+                          onClick={() => handleCategorySelect(category.name)}
+                        >
+                          {category.name}
+                        </button>
+
+                        {isActive && categorySubcategories.length ? (
+                          <div className="subcategory-pills" aria-label="Zgjidh nenkategorine">
+                            {categorySubcategories.map((subcategory) => (
+                              <button
+                                type="button"
+                                key={subcategory}
+                                className={`subcategory-pill ${
+                                  activeSubcategory === subcategory ? 'subcategory-pill--active' : ''
+                                }`}
+                                onClick={() => setActiveSubcategory(subcategory)}
+                              >
+                                {subcategory}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
                     );
                   })}
                 </div>
-
-                {availableSubcategories.length ? (
-                  <div className="subcategory-pills" aria-label="Zgjidh nenkategorine">
-                    {availableSubcategories.map((subcategory) => (
-                      <button
-                        type="button"
-                        key={subcategory}
-                        className={`subcategory-pill ${
-                          activeSubcategory === subcategory ? 'subcategory-pill--active' : ''
-                        }`}
-                        onClick={() => setActiveSubcategory(subcategory)}
-                      >
-                        {subcategory}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
 
                 <div className="articles-showcase">
                   {filteredArticles.length ? (
@@ -366,6 +387,90 @@ function App() {
                     </article>
                   )}
                 </div>
+              </section>
+
+              <section className="category-highlights" aria-label="Highlights sipas kategorive">
+                {categoryHighlights.map((category) => (
+                  <section className="category-highlight-block" key={category.name}>
+                    <div className="category-highlight-block__header">
+                      <p className="section-heading__kicker">Highlights</p>
+                      <h3>{category.name}</h3>
+                    </div>
+
+                    {category.latestArticles.length ? (
+                      (() => {
+                        const activeIndex = Math.min(
+                          categoryHighlightIndexes[category.name] || 0,
+                          Math.max(category.latestArticles.length - 1, 0)
+                        );
+                        const activeArticle = category.latestArticles[activeIndex];
+
+                        return (
+                          <div className="category-highlight-hero">
+                            <div className="category-highlight-hero__copy">
+                              <p className="spotlight__label">Highlight</p>
+                              <h4>{activeArticle.title}</h4>
+                              <p>{activeArticle.excerpt}</p>
+                              <button
+                                type="button"
+                                className="hero__spotlight-button"
+                                onClick={() => handleArticleOpen(activeArticle)}
+                              >
+                                Lexo artikullin
+                              </button>
+                            </div>
+
+                            <div
+                              className="category-highlight-hero__media"
+                              aria-label={`Foto e artikullit nga ${category.name}`}
+                            >
+                              <span className="hero__spotlight-badge">Foto Artikulli</span>
+                              {activeArticle.image ? (
+                                <div
+                                  className="hero__spotlight-frame hero__spotlight-frame--image"
+                                  style={{ backgroundImage: `url(${activeArticle.image})` }}
+                                />
+                              ) : (
+                                <div className="hero__spotlight-frame">
+                                  <span>{activeArticle.title}</span>
+                                </div>
+                              )}
+
+                              {category.latestArticles.length > 1 ? (
+                                <div className="hero__spotlight-controls">
+                                  {category.latestArticles.map((article, index) => (
+                                    <button
+                                      type="button"
+                                      key={`${category.name}-${article.id}`}
+                                      className={`hero__spotlight-dot ${
+                                        index === activeIndex ? 'hero__spotlight-dot--active' : ''
+                                      }`}
+                                      aria-label={`Shfaq artikullin ${index + 1} te ${category.name}`}
+                                      onClick={() => setCategoryHighlightIndex(category.name, index)}
+                                    />
+                                  ))}
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
+                        );
+                      })()
+                    ) : (
+                      <div className="category-highlight-block__grid">
+                        <article className="article-card article-card--empty article-card--compact">
+                          <div className="article-card__meta">
+                            <span className="article-card__label">{category.name}</span>
+                          </div>
+                          <h3>Nuk ka ende artikuj ne kete kategori.</h3>
+                          <p>
+                            Sapo te publikosh postime ne WordPress per {category.name}, 5 me te
+                            fundit do te shfaqen automatikisht ketu.
+                          </p>
+                        </article>
+                      </div>
+                    )}
+                  </section>
+                ))}
               </section>
 
               <section className="newsletter" aria-label="Newsletter subscription">

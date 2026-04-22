@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import bigNewsLogo from './assets/bignews-logo.png';
+import { publishFacebookPagePost } from './facebook';
 import {
   buildCategoryPayload,
   DEFAULT_CATEGORY_NAMES,
@@ -427,10 +428,25 @@ function AdminApp() {
         status: currentPreview.directPublish ? 'publish' : 'draft',
       });
 
+      let facebookNote = '';
+
+      if (currentPreview.directPublish && createdPost?.URL) {
+        try {
+          await publishFacebookPagePost({
+            title: currentPreview.title,
+            excerpt: currentPreview.excerpt,
+            link: createdPost.URL,
+          });
+          facebookNote = ' Postimi u dergua edhe ne Facebook Page.';
+        } catch (facebookError) {
+          facebookNote = ` Facebook deshtoi: ${facebookError.message}`;
+        }
+      }
+
       setAgentMessage(
         `Postimi u krijua me sukses ne WordPress si ${currentPreview.directPublish ? 'published' : 'draft'}: ${
           createdPost?.title || currentPreview.title
-        }.`
+        }.${facebookNote}`
       );
     } catch (error) {
       setAgentMessage(error.message || 'Publikimi direkt ne WordPress deshtoi.');
@@ -467,13 +483,28 @@ function AdminApp() {
       status: automaticForm.directPublish ? 'publish' : 'draft',
     });
 
+    let facebookNote = '';
+
+    if (automaticForm.directPublish && createdPost?.URL) {
+      try {
+        await publishFacebookPagePost({
+          title,
+          excerpt,
+          link: createdPost.URL,
+        });
+        facebookNote = ' Postimi u dergua edhe ne Facebook Page.';
+      } catch (facebookError) {
+        facebookNote = ` Facebook deshtoi: ${facebookError.message}`;
+      }
+    }
+
     rememberSeenItem(article.link);
     setAgentMessage(
       `Hapi ${row.id} u ekzekutua me sukses. Artikulli "${createdPost?.title || title}" u mor nga ${article.source}, u perkthye ne shqip dhe u publikua te ${row.category} si ${
         row.subcategory ? `${row.subcategory} / ` : ''
       }${
         automaticForm.directPublish ? 'published' : 'draft'
-      }.`
+      }.${facebookNote}`
     );
   };
 
@@ -598,6 +629,11 @@ function AdminApp() {
             te WordPress.com. Agjenti automatik perdor RSS feeds kryesore dhe i publikon sipas
             hapave `Ready`.
           </div>
+          <p className="admin-helper">
+            Per Facebook Page, lidhja tani behet ne server me `FACEBOOK_PAGE_ID` dhe
+            `FACEBOOK_PAGE_ACCESS_TOKEN`. Kur `Publiko direkt` eshte aktiv, agjenti do ta
+            dergoje postimin e sapo publikuar edhe ne Facebook me link-un e artikullit.
+          </p>
           <div className="admin-wordpress-connection">
             <label className="agent-field">
               <span>WordPress site</span>

@@ -747,17 +747,24 @@ input {
   box-shadow: var(--shadow);
 }
 
-.category-pills {
+.category-groups {
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
+  align-items: flex-start;
+}
+
+.category-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
 }
 
 .subcategory-pills {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 18px;
 }
 
 .articles-showcase {
@@ -890,6 +897,97 @@ input {
 .article-card__button:hover {
   transform: translateY(-1px);
   background: #38312a;
+}
+
+.category-highlights {
+  display: grid;
+  gap: 22px;
+  margin-top: 28px;
+}
+
+.category-highlight-block {
+  padding: 26px 24px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top left, rgba(201, 167, 255, 0.16), transparent 22%),
+    linear-gradient(135deg, rgba(255, 251, 255, 0.94), rgba(240, 229, 255, 0.9));
+  box-shadow: var(--shadow);
+}
+
+.category-highlight-block__header h3 {
+  margin: 10px 0 0;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2.3rem);
+  line-height: 1.02;
+}
+
+.category-highlight-block__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  margin-top: 22px;
+}
+
+.category-highlight-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.95fr);
+  gap: 22px;
+  margin-top: 22px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.58);
+  backdrop-filter: blur(10px);
+}
+
+.category-highlight-hero__copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.category-highlight-hero__copy h4 {
+  margin: 12px 0;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(1.6rem, 2.8vw, 2.55rem);
+  line-height: 1.08;
+}
+
+.category-highlight-hero__copy p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.category-highlight-hero__media {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.category-highlight-hero__media .hero__spotlight-frame {
+  min-height: 240px;
+}
+
+.article-card--compact {
+  min-height: 100%;
+  padding: 18px;
+}
+
+.article-card--compact .article-card__image {
+  width: calc(100% + 36px);
+  max-width: none;
+  height: 170px;
+  margin: -18px -18px 14px;
+  border-radius: 20px 20px 0 0;
+}
+
+.article-card--compact h3 {
+  font-size: clamp(1.1rem, 1.8vw, 1.45rem);
+}
+
+.article-card--compact p {
+  font-size: 0.96rem;
 }
 
 .article-page {
@@ -1091,6 +1189,14 @@ input {
     grid-template-columns: 1fr;
   }
 
+  .category-highlight-block__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .category-highlight-hero {
+    grid-template-columns: 1fr;
+  }
+
   .newsletter {
     grid-template-columns: 1fr;
   }
@@ -1139,9 +1245,21 @@ input {
     text-align: center;
   }
 
+  .category-group {
+    width: 100%;
+  }
+
   .subcategory-pill {
     width: 100%;
     text-align: center;
+  }
+
+  .category-highlight-block {
+    padding: 22px;
+  }
+
+  .category-highlight-block__grid {
+    grid-template-columns: 1fr;
   }
 
   .newsletter {
