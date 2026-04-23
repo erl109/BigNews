@@ -215,38 +215,39 @@ function App() {
             </div>
 
             {!selectedArticle ? (
-              <aside className="hero__spotlight">
-                <div className="hero__spotlight-copy">
-                  <p className="spotlight__label">Highlight</p>
-                  <h2>
-                    {heroHighlight?.title ||
-                      'Publiko artikullin e pare ne WordPress qe te shfaqet ketu.'}
-                  </h2>
-                  <p>
-                    {heroHighlight?.excerpt ||
-                      'Kjo zone do te mbushet automatikisht nga postimi me i fundit ne WordPress.'}
-                  </p>
-                  {heroHighlight ? (
-                    <button
-                      type="button"
-                      className="hero__spotlight-button"
-                      onClick={() => handleArticleOpen(heroHighlight)}
-                    >
-                      Lexo artikullin
-                    </button>
-                  ) : null}
-                </div>
-
+              <aside className="hero__spotlight hero__spotlight--cover">
                 <div className="hero__spotlight-image" aria-label="Foto e artikullit highlight">
-                  <span className="hero__spotlight-badge">Foto Artikulli</span>
                   {heroHighlight?.image ? (
                     <div
                       className="hero__spotlight-frame hero__spotlight-frame--image"
                       style={{ backgroundImage: `url(${heroHighlight.image})` }}
-                    />
+                    >
+                      <div className="hero__spotlight-overlay">
+                        <p className="spotlight__label">Highlight</p>
+                        <h2>{heroHighlight.title}</h2>
+                        <p>{heroHighlight.excerpt}</p>
+                        <button
+                          type="button"
+                          className="hero__spotlight-button"
+                          onClick={() => handleArticleOpen(heroHighlight)}
+                        >
+                          Lexo artikullin
+                        </button>
+                      </div>
+                    </div>
                   ) : (
                     <div className="hero__spotlight-frame">
-                      <span>{heroHighlight?.title || 'Pamja kryesore e dites'}</span>
+                      <div className="hero__spotlight-overlay">
+                        <p className="spotlight__label">Highlight</p>
+                        <h2>
+                          {heroHighlight?.title ||
+                            'Publiko artikullin e pare ne WordPress qe te shfaqet ketu.'}
+                        </h2>
+                        <p>
+                          {heroHighlight?.excerpt ||
+                            'Kjo zone do te mbushet automatikisht nga postimi me i fundit ne WordPress.'}
+                        </p>
+                      </div>
                     </div>
                   )}
                   {recentPosts.length > 1 ? (
